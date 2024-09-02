@@ -13,8 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia el contenido de la aplicación al contenedor
 COPY . .
 
-# Descargar recursos NLTK necesarios
-RUN python -m nltk.downloader punkt stopwords wordnet
 
 # Expone el puerto en el que la aplicación Flask se ejecutará
 EXPOSE 5000
