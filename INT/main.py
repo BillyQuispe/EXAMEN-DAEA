@@ -30,7 +30,7 @@ def clean(text):
     return " ".join(clean_list)
 
 # Crear columna 'Description' combinando columnas relevantes
-data['Description'] = data['Name'] + ' ' + data['Muscle'] + ' ' + data['Relevance']
+data['Description'] = data['Exercise'] + ' ' + data['Muscle'] + ' ' + data['Descripcion']
 data['Description'] = data['Description'].apply(clean)
 
 # Vectorización de TF-IDF
@@ -42,7 +42,7 @@ descriptions_tokenized = data['Description'].apply(lambda x: word_tokenize(x))
 w2v_model = Word2Vec(sentences=descriptions_tokenized, vector_size=100, window=5, min_count=1, workers=4)
 
 # Función para expandir términos con Word2Vec
-def expand_term_with_word2vec(term, top_n=5):
+def expand_term_with_word2vec(term, top_n   =5):
     similar_terms = []
     try:
         similar_terms = [term]  # Incluir el término original
@@ -77,11 +77,12 @@ def recomendacion(termino):
     recommendations = []
     for i, score in sorted_similar_exercises:
         recommendations.append({
-            "Name": data.loc[i, "Name"],
+            "Name": data.loc[i, "Exercise"],
             "Muscle": data.loc[i, "Muscle"],
-            "Description": data.loc[i, "Description"],
-            "Relevance": data.loc[i, "Relevance"],
+            "Description": data.loc[i, "Descripcion"],
+            "Additional Info": data.loc[i, "Additional"],
             "Score": score,
+            "Description": data.loc[i, "Description"],
         })
 
     return jsonify(recommendations)

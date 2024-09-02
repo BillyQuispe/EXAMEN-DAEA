@@ -1,4 +1,4 @@
-Exercise Name,Main Muscle,Description,Additional Info
+Exercise,Muscle,Descripcion,Additional
 Push-Up,Chest,"A basic bodyweight exercise where you lower and raise your body using your arms while keeping a straight posture.",Best performed with hands slightly wider than shoulder-width.
 Pull-Up,Back,"An upper body exercise where you pull yourself up until your chin is above the bar.",Requires a pull-up bar; can be performed with different grips.
 Squat,Legs,"A compound movement where you lower your hips from a standing position and then stand back up.",Maintain a neutral spine and avoid letting knees go over toes.
@@ -19,8 +19,6 @@ Seated Row,Back,"A machine or cable exercise where you pull handles towards your
 Hamstring Curl,Hamstrings,"A machine exercise where you curl your legs towards your buttocks while lying face down.",Adjust the machine so the pad is just above your ankles.
 Cable Cross,Chest,"A cable exercise where you pull handles from the sides of your body to meet in front of your chest.",Use a slow and controlled movement.
 Arnold Press,Shoulders,"A variation of the shoulder press where you rotate your wrists during the movement.",Named after Arnold Schwarzenegger; engages all heads of the deltoid.
-Step-Up,Legs,"An exercise where you step onto a raised platform with one leg, then bring the other leg up.",Targets quadriceps, glutes, and stabilizer muscles.
-Mountain Climber,Core,"A cardio and core exercise where you alternate driving your knees towards your chest in a plank position.",Maintain a fast pace while keeping a strong core.
 Russian Twist,Obliques,"A core exercise where you twist your torso from side to side while sitting.",Can be done with or without weight for added resistance.
 Side Plank,Obliques,"A variation of the plank where you support your body on one arm and one foot while keeping a straight line.",Great for targeting the obliques and improving balance.
 Reverse Fly,Shoulders,"A dumbbell exercise where you lift your arms to the sides while bending at the hips.",Targets the rear delts and upper back muscles.
@@ -36,7 +34,6 @@ T-Bar Row,Back,"A compound exercise where you pull a T-bar or barbell towards yo
 Skull Crusher,Triceps,"A tricep exercise where you lower a barbell towards your forehead while lying on a bench.",Keep your elbows steady and control the weight.
 Cable Curl,Biceps,"A cable exercise where you curl the handle towards your shoulder, targeting the biceps.",Use a slow and controlled motion to avoid swinging.
 Glute Bridge,Glutes,"An exercise where you lift your hips off the ground while lying on your back, targeting the glutes.",Great for activating the glutes and strengthening the lower back.
-Shrug,Trapezius,"A simple exercise where you lift your shoulders towards your ears, targeting the traps.",Can be done with dumbbells, barbells, or a trap bar.
 Cable Kickback,Glutes,"A cable exercise where you kick your leg back while keeping it straight, targeting the glutes.",Use a low weight and focus on the squeeze at the top.
 Overhead Tricep Extension,Triceps,"A tricep exercise where you extend your arms overhead while holding a dumbbell or cable handle.",Keep your elbows close to your head to isolate the triceps.
 Barbell Row,Back,"A compound exercise where you pull a barbell towards your torso while bent over.",Use an overhand or underhand grip depending on the focus.
