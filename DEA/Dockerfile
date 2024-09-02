@@ -30,3 +30,4 @@ WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 80
 ENTRYPOINT ["dotnet", "MyMicroservice.dll"]
+

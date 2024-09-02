@@ -11,6 +11,7 @@ from gensim.models import Word2Vec
 import numpy as np
 nltk.download('stopwords')
 nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('wordnet')
 
 app = Flask(__name__)
