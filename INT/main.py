@@ -16,7 +16,7 @@ nltk.download('wordnet')
 app = Flask(__name__)
 
 # Cargar los datos de ejercicios
-data = pd.read_csv('exercises.csv')
+data = pd.read_csv('exercise.csv')
 
 # Preprocesamiento
 en_stopwords = stopwords.words("english")
