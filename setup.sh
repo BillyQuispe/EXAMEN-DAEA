@@ -9,6 +9,10 @@ SA_PASSWORD="StrongPassword123"
 FLASK_IMAGE_NAME="flask-app"
 FLASK_CONTAINER_NAME="flask"
 
+# Crear la red Docker
+echo "Creando la red Docker..."
+docker network create $NETWORK_NAME
+
 # Construir la imagen de SQL Server
 echo "Construyendo la imagen de SQL Server..."
 docker build -t $IMAGE_NAME .
@@ -58,7 +62,7 @@ docker run -d \
     --network $NETWORK_NAME \
     --name $FLASK_CONTAINER_NAME \
     -e "FLASK_APP=main.py" \
-    -e "DATABASE_URL=DRIVER={ODBC Driver 17 for SQL Server};SERVER=sqlserver;DATABASE=$DB_NAME;UID=sa;PWD=$SA_PASSWORD" \
+    -e "DATABASE_URL=DRIVER={ODBC Driver 17 for SQL Server};SERVER=$CONTAINER_NAME;DATABASE=$DB_NAME;UID=sa;PWD=$SA_PASSWORD" \
     -p 5000:5000 \
     $FLASK_IMAGE_NAME
 
