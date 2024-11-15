@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  mongo:
+    image: mongo:latest
+    networks:
+      - mi_red
+    volumes:
+      - mongo-data:/data/db
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  flask:
+    image: flask-app:latest  # Imagen del contenedor Flask
+    networks:
+      - mi_red
+    environment:
+      FLASK_APP: main.py
+      DATABASE_URL: mongodb://mongo:27017/MiBaseDeDatos
+    ports:
+      - "5000:5000"
+    deploy:
+      replicas: 3  # Escala a 3 réplicas
+      restart_policy:
+        condition: on-failure
+
+  spark:
+    image: spark:latest  # Imagen de Apache Spark
+    networks:
+      - mi_red
+    deploy:
+      replicas: 2  # Escalar el clúster de Spark
+      restart_policy:
+        condition: on-failure
+
+networks:
+  mi_red:
+
+volumes:
+  mongo-data:
