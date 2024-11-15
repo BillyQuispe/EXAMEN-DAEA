@@ -1,11 +1,10 @@
 #!/bin/bash
 
 # Variables
-IMAGE_NAME="sqlserver-image"
-CONTAINER_NAME="sqlserver"
+MONGO_IMAGE_NAME="mongo-image"
+MONGO_CONTAINER_NAME="mongo"
 NETWORK_NAME="mi_red"
 DB_NAME="MiBaseDeDatos"
-SA_PASSWORD="StrongPassword123"
 FLASK_IMAGE_NAME="flask-app"
 FLASK_CONTAINER_NAME="flask"
 
@@ -13,44 +12,36 @@ FLASK_CONTAINER_NAME="flask"
 echo "Creando la red Docker..."
 docker network create $NETWORK_NAME
 
-# Construir la imagen de SQL Server
-echo "Construyendo la imagen de SQL Server..."
-docker build -t $IMAGE_NAME .
-
-# Ejecutar el contenedor de SQL Server
-echo "Levantando el contenedor de SQL Server..."
+# Ejecutar el contenedor de MongoDB
+echo "Levantando el contenedor de MongoDB..."
 docker run -d \
     --network $NETWORK_NAME \
-    --name $CONTAINER_NAME \
-    -e "ACCEPT_EULA=Y" \
-    -e "MSSQL_SA_PASSWORD=$SA_PASSWORD" \
-    -e "MSSQL_PID=Express" \
-    -p 1433:1433 \
-    $IMAGE_NAME
+    --name $MONGO_CONTAINER_NAME \
+    -p 27017:27017 \
+    mongo
 
-# Esperar a que SQL Server esté listo
-echo "Esperando a que SQL Server esté listo..."
-sleep 30  # Ajusta este tiempo si es necesario
+# Esperar a que MongoDB esté listo
+echo "Esperando a que MongoDB esté listo..."
+sleep 10  # Ajusta este tiempo si es necesario
 
-# Ejecutar un contenedor temporal para crear la base de datos y las tablas
-echo "Ejecutando un contenedor temporal para crear la base de datos y las tablas..."
-docker run -it --network $NETWORK_NAME --rm mcr.microsoft.com/mssql-tools /bin/bash -c "
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d master -Q \"CREATE DATABASE $DB_NAME;\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"CREATE TABLE Usuarios (ID INT PRIMARY KEY, Nombre NVARCHAR(100));\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"CREATE TABLE Skills (ID INT PRIMARY KEY, Nombre NVARCHAR(100));\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"CREATE TABLE UsuarioSkills (ID INT PRIMARY KEY, ID_Usuario INT, ID_Skill INT, Puntuacion INT, FOREIGN KEY (ID_Usuario) REFERENCES Usuarios(ID), FOREIGN KEY (ID_Skill) REFERENCES Skills(ID));\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"INSERT INTO Usuarios (ID, Nombre) VALUES (1, 'Juan Pérez');\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"INSERT INTO Usuarios (ID, Nombre) VALUES (2, 'María López');\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"INSERT INTO Usuarios (ID, Nombre) VALUES (3, 'Carlos García');\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"INSERT INTO Skills (ID, Nombre) VALUES (1, 'Programación');\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"INSERT INTO Skills (ID, Nombre) VALUES (2, 'Diseño Gráfico');\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"INSERT INTO Skills (ID, Nombre) VALUES (3, 'Gestión de Proyectos');\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"INSERT INTO UsuarioSkills (ID, ID_Usuario, ID_Skill, Puntuacion) VALUES (1, 1, 1, 90);\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"INSERT INTO UsuarioSkills (ID, ID_Usuario, ID_Skill, Puntuacion) VALUES (2, 2, 2, 85);\"
-    sqlcmd -S $CONTAINER_NAME -U sa -P $SA_PASSWORD -d $DB_NAME -Q \"INSERT INTO UsuarioSkills (ID, ID_Usuario, ID_Skill, Puntuacion) VALUES (3, 3, 3, 95);\"
+# Ejecutar un contenedor temporal para crear la base de datos y las colecciones
+echo "Ejecutando un contenedor temporal para crear la base de datos y las colecciones..."
+docker run -it --network $NETWORK_NAME --rm mongo /bin/bash -c "
+    mongo $DB_NAME --eval 'db.createCollection(\"Usuarios\");'
+    mongo $DB_NAME --eval 'db.createCollection(\"Skills\");'
+    mongo $DB_NAME --eval 'db.createCollection(\"UsuarioSkills\");'
+    mongo $DB_NAME --eval 'db.Usuarios.insert({ ID: 1, Nombre: \"Juan Pérez\" });'
+    mongo $DB_NAME --eval 'db.Usuarios.insert({ ID: 2, Nombre: \"María López\" });'
+    mongo $DB_NAME --eval 'db.Usuarios.insert({ ID: 3, Nombre: \"Carlos García\" });'
+    mongo $DB_NAME --eval 'db.Skills.insert({ ID: 1, Nombre: \"Programación\" });'
+    mongo $DB_NAME --eval 'db.Skills.insert({ ID: 2, Nombre: \"Diseño Gráfico\" });'
+    mongo $DB_NAME --eval 'db.Skills.insert({ ID: 3, Nombre: \"Gestión de Proyectos\" });'
+    mongo $DB_NAME --eval 'db.UsuarioSkills.insert({ ID: 1, ID_Usuario: 1, ID_Skill: 1, Puntuacion: 90 });'
+    mongo $DB_NAME --eval 'db.UsuarioSkills.insert({ ID: 2, ID_Usuario: 2, ID_Skill: 2, Puntuacion: 85 });'
+    mongo $DB_NAME --eval 'db.UsuarioSkills.insert({ ID: 3, ID_Usuario: 3, ID_Skill: 3, Puntuacion: 95 });'
 "
 
-echo "Base de datos y tablas creadas con éxito."
+echo "Base de datos y colecciones creadas con éxito."
 
 # Construir la imagen de Flask
 echo "Construyendo la imagen de Flask..."
@@ -62,7 +53,7 @@ docker run -d \
     --network $NETWORK_NAME \
     --name $FLASK_CONTAINER_NAME \
     -e "FLASK_APP=main.py" \
-    -e "DATABASE_URL=DRIVER={ODBC Driver 17 for SQL Server};SERVER=$CONTAINER_NAME;DATABASE=$DB_NAME;UID=sa;PWD=$SA_PASSWORD" \
+    -e "DATABASE_URL=mongodb://$MONGO_CONTAINER_NAME:27017/$DB_NAME" \
     -p 5000:5000 \
     $FLASK_IMAGE_NAME
 
