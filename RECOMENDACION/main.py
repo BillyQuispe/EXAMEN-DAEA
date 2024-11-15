@@ -1,26 +1,54 @@
 from flask import Flask, request, jsonify
-import pyodbc
+from pymongo import MongoClient
 import pandas as pd
+from sklearn.metrics.pairwise import cosine_similarity
+import logging
 
 app = Flask(__name__)
 
-# Conectar a SQL Server
-conn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=sqlserver;DATABASE=MiBaseDeDatos;UID=sa;PWD=StrongPassword123'
-conn = pyodbc.connect(conn_str)
+# Configuración de logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Consulta para obtener datos de la base de datos
+# Conectar a MongoDB
+client = MongoClient("mongodb://mongodb:27017")  # Asegúrate de que 'mongodb' es el nombre del servicio en Docker
+db = client["MiBaseDeDatos"]  # Nombre de tu base de datos
+
+# Verificación de la conexión a la base de datos
+try:
+    # Intentar obtener una colección para verificar la conexión
+    db.list_collection_names()
+    logger.info("Conexión exitosa a la base de datos MongoDB.")
+except Exception as e:
+    logger.error(f"Error al conectar a la base de datos: {e}")
+
+# Obtener los datos de usuarios y habilidades
 def fetch_user_data():
-    query = '''
-    SELECT u.ID, u.Nombre, s.Nombre as Skill, us.Puntuacion
-    FROM Usuarios u
-    JOIN UsuarioSkills us ON u.ID = us.ID_Usuario
-    JOIN Skills s ON us.ID_Skill = s.ID
-    '''
-    df = pd.read_sql(query, conn)
+    usuarios = db["Usuarios"].find()
+    skills = db["Skills"].find()
+    usuario_skills = db["UsuarioSkills"].find()
+    
+    # Convertir a DataFrame
+    users_list = list(usuarios)
+    skills_list = list(skills)
+    usuario_skills_list = list(usuario_skills)
+    
+    # Unir la información en un solo DataFrame
+    df = pd.DataFrame(usuario_skills_list)
+    
+    # Agregar nombres de usuarios y habilidades desde sus colecciones
+    df["Nombre"] = df["ID_Usuario"].apply(lambda x: next(user["Nombre"] for user in users_list if user["ID"] == x))
+    df["Skill"] = df["ID_Skill"].apply(lambda x: next(skill["Nombre"] for skill in skills_list if skill["ID"] == x))
+    
     return df
 
 # Obtener los datos al inicio para no hacer la consulta en cada petición
 user_data = fetch_user_data()
+
+# Generar matriz de usuarios con sus habilidades y puntajes para similitud de coseno
+skill_matrix = user_data.pivot_table(index='Nombre', columns='Skill', values='Puntuacion', fill_value=0)
+cosine_sim = cosine_similarity(skill_matrix)
+cosine_sim_df = pd.DataFrame(cosine_sim, index=skill_matrix.index, columns=skill_matrix.index)
 
 @app.route('/recomendacion/<string:skill>', methods=['GET'])
 def recomendacion(skill):
@@ -28,7 +56,12 @@ def recomendacion(skill):
     filtered_data = user_data[user_data['Skill'].str.lower() == skill.lower()]
     sorted_data = filtered_data.sort_values(by='Puntuacion', ascending=False).head(5)
 
-    # Preparar las recomendaciones
+    # Verificar si sorted_data está vacío
+    if sorted_data.empty:
+        logger.warning(f"No se encontraron datos para la skill: {skill}")
+        return jsonify({"mensaje": "No se encontraron usuarios con esa habilidad."}), 404
+
+    # Preparar recomendaciones de los mejores en la habilidad solicitada
     recommendations = []
     for index, row in sorted_data.iterrows():
         recommendations.append({
@@ -36,6 +69,25 @@ def recomendacion(skill):
             "Skill": row["Skill"],
             "Puntuacion": row["Puntuacion"]
         })
+
+    # Buscar estudiantes similares si no hay suficientes en la habilidad solicitada
+    if len(recommendations) < 5:
+        top_user = sorted_data.iloc[0]['Nombre']  # Usuario con puntaje más alto en la habilidad
+        similar_users = cosine_sim_df[top_user].sort_values(ascending=False).index[1:6]
+
+        # Agregar usuarios similares con otras habilidades
+        for similar_user in similar_users:
+            similar_data = user_data[(user_data['Nombre'] == similar_user) & (user_data['Skill'] != skill)]
+            for _, row in similar_data.iterrows():
+                recommendations.append({
+                    "Usuario": row["Nombre"],
+                    "Skill": row["Skill"],
+                    "Puntuacion": row["Puntuacion"]
+                })
+                if len(recommendations) >= 10:  # Limitar a 10 recomendaciones
+                    break
+            if len(recommendations) >= 10:
+                break
 
     return jsonify(recommendations)
 

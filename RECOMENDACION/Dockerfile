@@ -1,30 +1,17 @@
-# Usa una imagen base oficial de Python
+# Usa la imagen oficial de Python
 FROM python:3.9-slim
 
-# Instalar dependencias necesarias para pyodbc y SQL Server
-RUN apt-get update && apt-get install -y \
-    unixodbc-dev \
-    curl \
-    apt-transport-https \
-    gnupg \
-    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
-    && curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list \
-    && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17
-
-# Configura el directorio de trabajo en el contenedor
+# Establece el directorio de trabajo
 WORKDIR /app
 
-# Copia el archivo de dependencias al contenedor
-COPY requirements.txt .
+# Copia los archivos de la aplicación al contenedor
+COPY . /app
 
-# Instala las dependencias de Python
+# Instala las dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia el contenido de la aplicación al contenedor
-COPY . .
-
-# Expone el puerto en el que la aplicación Flask se ejecutará
+# Exponer el puerto que usará la API (5000)
 EXPOSE 5000
 
-# Comando para ejecutar la aplicación Flask
+# Comando para ejecutar la aplicación
 CMD ["python", "main.py"]
