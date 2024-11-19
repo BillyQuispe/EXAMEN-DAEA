@@ -1,5 +1,5 @@
-# Usa la imagen oficial de Python
-FROM python:3.9-slim
+# Usa la imagen oficial de Bitnami Spark
+FROM bitnami/spark:3.5.1
 
 # Establece el directorio de trabajo
 WORKDIR /app
@@ -7,7 +7,7 @@ WORKDIR /app
 # Copia los archivos de la aplicación al contenedor
 COPY . /app
 
-# Instala las dependencias
+# Instala las dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Exponer el puerto que usará la API (5000)
