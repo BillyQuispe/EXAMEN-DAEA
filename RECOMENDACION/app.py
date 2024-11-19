@@ -4,6 +4,7 @@ from pyspark.sql import SparkSession
 from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 import logging
+from bson import ObjectId
 
 app = Flask(__name__)
 
@@ -33,6 +34,14 @@ def fetch_user_data():
     usuarios = list(db["Usuarios"].find())
     skills = list(db["Skills"].find())
     usuario_skills = list(db["UsuarioSkills"].find())
+    
+    # Convertir ObjectId a string
+    for usuario in usuarios:
+        usuario["_id"] = str(usuario["_id"])
+    for skill in skills:
+        skill["_id"] = str(skill["_id"])
+    for usuario_skill in usuario_skills:
+        usuario_skill["_id"] = str(usuario_skill["_id"])
     
     # Crear DataFrames de Spark
     usuarios_df = spark.createDataFrame(usuarios)
