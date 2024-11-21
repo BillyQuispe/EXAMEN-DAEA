@@ -12,8 +12,8 @@
 }
 
 .skill-card {
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
+  background-color: #b3d9ff;
+  border: 1px solid #99c2ff;
   border-radius: 8px;
   padding: 20px;
   cursor: pointer;
@@ -22,22 +22,42 @@
 
 .skill-card:hover {
   transform: scale(1.05);
-  background-color: #e0e0e0;
+  background-color: #99c2ff;
 }
 
 .recommendations {
   margin-top: 40px;
 }
 
-.recommendations ul {
-  list-style-type: none;
-  padding: 0;
+.recommendation-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  justify-content: center;
 }
 
-.recommendations li {
-  background-color: #fafafa;
-  border: 1px solid #eee;
+.recommendation-card {
+  background-color: #e6f2ff;
+  border: 1px solid #cce0ff;
   border-radius: 8px;
-  padding: 10px;
+  padding: 20px;
+  height: 200px;
+  width: 200px;
+  text-align: left;
+}
+
+.user-name {
+  font-size: 1.2em;
+  font-weight: bold;
   margin-bottom: 10px;
+}
+
+.user-skill {
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.user-score {
+  font-size: 0.9em;
+  color: #666;
 }

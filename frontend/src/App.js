@@ -47,6 +47,11 @@ function App() {
     }
   };
 
+  const getSpanishSkill = (skillName) => {
+    const skill = skills.find(skill => skill.name === skillName);
+    return skill ? skill.spanish : skillName;
+  };
+
   return (
     <div className="App">
       <h1>Recomendador de Habilidades</h1>
@@ -63,15 +68,15 @@ function App() {
       </div>
       <div className="recommendations">
         <h2>Recomendaciones</h2>
-        <ul>
+        <div className="recommendation-cards">
           {recommendations.map((rec, index) => (
-            <li key={index}>
-              <strong>Usuario:</strong> {rec.Usuario} <br />
-              <strong>Habilidad:</strong> {rec.Skill} <br />
-              <strong>Puntuación:</strong> {rec.Puntuacion}
-            </li>
+            <div key={index} className="recommendation-card">
+              <strong className="user-name">{rec.Usuario.replace(/_/g, ' ')}</strong>
+              <p className="user-skill">{getSpanishSkill(rec.Skill)}</p>
+              <p className="user-score">{rec.Puntuacion}</p>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
     </div>
   );
