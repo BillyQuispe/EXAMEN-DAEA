@@ -35,15 +35,15 @@ def fetch_user_data():
     skills = db["Skills"].find()
     usuario_skills = db["UsuarioSkills"].find()
     
-    # Convertir a DataFrame
+    
     users_list = list(usuarios)
     skills_list = list(skills)
     usuario_skills_list = list(usuario_skills)
     
-    # Unir la información en un solo DataFrame
+    
     df = pd.DataFrame(usuario_skills_list)
     
-    # Agregar nombres de usuarios y habilidades desde sus colecciones
+    
     df["Nombre"] = df["ID_Usuario"].apply(lambda x: next(user["Nombre"] for user in users_list if user["ID"] == x))
     df["Skill"] = df["ID_Skill"].apply(lambda x: next(skill["Nombre"] for skill in skills_list if skill["ID"] == x))
     
