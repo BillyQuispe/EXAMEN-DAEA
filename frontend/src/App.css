@@ -29,12 +29,12 @@
   margin-top: 40px;
 }
 
-.recommendations ul {
+.recommendations-cards {
   list-style-type: none;
   padding: 0;
 }
 
-.recommendations li {
+.recommendations-card {
   background-color: #b3d9ff;
   border: 1px solid #99c2ff;
   border-radius: 8px;
