@@ -29,21 +29,19 @@
   margin-top: 40px;
 }
 
-.recommendation-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  justify-content: center;
+.recommendations ul {
+  list-style-type: none;
+  padding: 0;
 }
 
-.recommendation-card {
-  background-color: #e6f2ff;
-  border: 1px solid #cce0ff;
+.recommendations li {
+  background-color: #b3d9ff;
+  border: 1px solid #99c2ff;
   border-radius: 8px;
-  padding: 20px;
-  height: 200px;
-  width: 200px;
-  text-align: left;
+  padding: 10px;
+  margin-bottom: 10px;
+  width: 70%; /* Ajustar el ancho al 70% para que no ocupe el 100% */
+  margin: 0 auto 10px auto; /* Centrar las tarjetas horizontalmente */
 }
 
 .user-name {
