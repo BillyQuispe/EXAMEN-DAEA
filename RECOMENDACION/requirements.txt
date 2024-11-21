@@ -1,4 +1,5 @@
 ﻿Flask
+flask-cors
 pymongo
 pandas
 scikit-learn
