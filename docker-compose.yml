@@ -11,13 +11,13 @@ services:
     volumes:
       - ./mongodb-init/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js  # Monta el script
 
-  redis: 
-    image: redis:latest 
-    container_name: redis 
+  redis:
+    image: redis:latest
+    container_name: redis
     ports:
-     - "6379:6379" 
+      - "6379:6379"
     networks:
-     - app_network
+      - app_network
 
   flask-api:
     build:
@@ -30,6 +30,17 @@ services:
     depends_on:
       - mongodb
       - redis
+
+  react-frontend:
+    build:
+      context: ./frontend
+    container_name: react-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - app_network
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000  # Usamos una variable de entorno para la URL del API
 
 networks:
   app_network:

@@ -50,16 +50,12 @@ def fetch_user_data():
 # Obtener los datos al inicio para no hacer la consulta en cada petición
 user_data = fetch_user_data()
 
-# Generar matriz de usuarios con sus habilidades y puntajes para similitud de coseno
-skill_matrix = user_data.pivot_table(index='Nombre', columns='Skill', values='Puntuacion', fill_value=0)
-cosine_sim = cosine_similarity(skill_matrix)
-cosine_sim_df = pd.DataFrame(cosine_sim, index=skill_matrix.index, columns=skill_matrix.index)
-
 # Vectorizar los nombres de las habilidades
 skills = user_data['Skill'].unique()
-vectorizer = TfidfVectorizer().fit_transform(skills)
-vectors = vectorizer.toarray()
-skill_sim_matrix = cosine_similarity(vectors)
+vectorizer = TfidfVectorizer()
+vectorizer.fit(skills)
+skill_vectors = vectorizer.transform(skills)
+skill_sim_matrix = cosine_similarity(skill_vectors)
 
 @app.route('/recomendacion/<string:skill>', methods=['GET'])
 def recomendacion(skill):
@@ -72,12 +68,7 @@ def recomendacion(skill):
 
     # Filtrar por la skill solicitada y ordenar por puntuación descendente
     filtered_data = user_data[user_data['Skill'].str.lower() == skill.lower()]
-    sorted_data = filtered_data.sort_values(by='Puntuacion', ascending=False).head(5)
-
-    # Verificar si sorted_data está vacío
-    if sorted_data.empty:
-        logger.warning(f"No se encontraron datos para la skill: {skill}")
-        return jsonify({"mensaje": "No se encontraron usuarios con esa habilidad."}), 404
+    sorted_data = filtered_data.sort_values(by='Puntuacion', ascending=False).head(10)
 
     # Preparar recomendaciones de los mejores en la habilidad solicitada
     recommendations = []
@@ -88,25 +79,30 @@ def recomendacion(skill):
             "Puntuacion": row["Puntuacion"]
         })
 
-    # Calcular similitud de texto para encontrar habilidades similares
-    skill_index = skills.tolist().index(skill)
-    similar_skills = skill_sim_matrix[skill_index].argsort()[::-1][1:6]
+    # Extraer la última palabra de la habilidad solicitada
+    last_word = skill.split('_')[-1]
 
-    # Buscar estudiantes similares si no hay suficientes en la habilidad solicitada
-    if len(recommendations) < 5:
-        for similar_skill_index in similar_skills:
-            similar_skill = skills[similar_skill_index]
-            similar_data = user_data[(user_data['Skill'] == similar_skill)]
-            for _, row in similar_data.iterrows():
-                recommendations.append({
-                    "Usuario": row["Nombre"],
-                    "Skill": row["Skill"],
-                    "Puntuacion": row["Puntuacion"]
-                })
-                if len(recommendations) >= 10:  # Limitar a 10 recomendaciones
-                    break
-            if len(recommendations) >= 10:
+    # Calcular similitud de texto para encontrar habilidades similares basadas en la última palabra
+    similar_skills = [s for s in skills if last_word.lower() in s.lower() and s.lower() != skill.lower()]
+
+    # Buscar habilidades similares
+    similar_recommendations = []
+    for similar_skill in similar_skills:
+        similar_data = user_data[user_data['Skill'].str.lower() == similar_skill.lower()]
+        similar_data_sorted = similar_data.sort_values(by='Puntuacion', ascending=False).head(10)
+        for index, row in similar_data_sorted.iterrows():
+            similar_recommendations.append({
+                "Usuario": row["Nombre"],
+                "Skill": row["Skill"],
+                "Puntuacion": row["Puntuacion"]
+            })
+            if len(similar_recommendations) >= 10:
                 break
+        if len(similar_recommendations) >= 10:
+            break
+
+    # Combinar recomendaciones
+    recommendations.extend(similar_recommendations)
 
     # Almacenar las recomendaciones en Redis
     redis_client.set(skill, json.dumps(recommendations))
