@@ -40,7 +40,7 @@ services:
     networks:
       - app_network
     environment:
-      - REACT_APP_API_URL=http://44.212.36.82:5000 # Usamos una variable de entorno para la URL del API
+      - REACT_APP_API_URL=http://18.215.183.205:5000 # Usamos una variable de entorno para la URL del API
 
 networks:
   app_network:
