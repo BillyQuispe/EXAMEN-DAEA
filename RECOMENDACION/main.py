@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from pymongo import MongoClient
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
@@ -8,6 +9,7 @@ import redis
 import json
 
 app = Flask(__name__)
+CORS(app)
 
 # Configuración de logging
 logging.basicConfig(level=logging.INFO)
