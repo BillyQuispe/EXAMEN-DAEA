@@ -2,7 +2,10 @@ from flask import Flask, request, jsonify
 from pymongo import MongoClient
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
 import logging
+import redis
+import json
 
 app = Flask(__name__)
 
@@ -14,9 +17,11 @@ logger = logging.getLogger(__name__)
 client = MongoClient("mongodb://mongodb:27017")  # Asegúrate de que 'mongodb' es el nombre del servicio en Docker
 db = client["MiBaseDeDatos"]  # Nombre de tu base de datos
 
+# Conectar a Redis
+redis_client = redis.Redis(host='redis', port=6379, db=0)
+
 # Verificación de la conexión a la base de datos
 try:
-    # Intentar obtener una colección para verificar la conexión
     db.list_collection_names()
     logger.info("Conexión exitosa a la base de datos MongoDB.")
 except Exception as e:
@@ -50,8 +55,21 @@ skill_matrix = user_data.pivot_table(index='Nombre', columns='Skill', values='Pu
 cosine_sim = cosine_similarity(skill_matrix)
 cosine_sim_df = pd.DataFrame(cosine_sim, index=skill_matrix.index, columns=skill_matrix.index)
 
+# Vectorizar los nombres de las habilidades
+skills = user_data['Skill'].unique()
+vectorizer = TfidfVectorizer().fit_transform(skills)
+vectors = vectorizer.toarray()
+skill_sim_matrix = cosine_similarity(vectors)
+
 @app.route('/recomendacion/<string:skill>', methods=['GET'])
 def recomendacion(skill):
+    # Intentar obtener los datos de Redis
+    cached_result = redis_client.get(skill)
+    if cached_result:
+        logger.info(f"Usando datos en caché para la habilidad: {skill}")
+        recommendations = json.loads(cached_result)
+        return jsonify(recommendations)
+
     # Filtrar por la skill solicitada y ordenar por puntuación descendente
     filtered_data = user_data[user_data['Skill'].str.lower() == skill.lower()]
     sorted_data = filtered_data.sort_values(by='Puntuacion', ascending=False).head(5)
@@ -70,14 +88,15 @@ def recomendacion(skill):
             "Puntuacion": row["Puntuacion"]
         })
 
+    # Calcular similitud de texto para encontrar habilidades similares
+    skill_index = skills.tolist().index(skill)
+    similar_skills = skill_sim_matrix[skill_index].argsort()[::-1][1:6]
+
     # Buscar estudiantes similares si no hay suficientes en la habilidad solicitada
     if len(recommendations) < 5:
-        top_user = sorted_data.iloc[0]['Nombre']  # Usuario con puntaje más alto en la habilidad
-        similar_users = cosine_sim_df[top_user].sort_values(ascending=False).index[1:6]
-
-        # Agregar usuarios similares con otras habilidades
-        for similar_user in similar_users:
-            similar_data = user_data[(user_data['Nombre'] == similar_user) & (user_data['Skill'] != skill)]
+        for similar_skill_index in similar_skills:
+            similar_skill = skills[similar_skill_index]
+            similar_data = user_data[(user_data['Skill'] == similar_skill)]
             for _, row in similar_data.iterrows():
                 recommendations.append({
                     "Usuario": row["Nombre"],
@@ -88,6 +107,10 @@ def recomendacion(skill):
                     break
             if len(recommendations) >= 10:
                 break
+
+    # Almacenar las recomendaciones en Redis
+    redis_client.set(skill, json.dumps(recommendations))
+    logger.info(f"Datos para la habilidad {skill} almacenados en caché.")
 
     return jsonify(recommendations)
 

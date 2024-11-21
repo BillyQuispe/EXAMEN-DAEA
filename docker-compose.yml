@@ -11,39 +11,13 @@ services:
     volumes:
       - ./mongodb-init/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js  # Monta el script
 
-  spark-master:
-    image: bitnami/spark:3.5.1
-    container_name: spark-master
-    environment:
-      - SPARK_MODE=master
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
-      - SPARK_USER=spark
+  redis: 
+    image: redis:latest 
+    container_name: redis 
     ports:
-      - '8080:8080'
-      - '7077:7077'
+     - "6379:6379" 
     networks:
-      - app_network
-
-  spark-worker:
-    image: bitnami/spark:3.5.1
-    container_name: spark-worker
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=1G      #<--- ajusta según sea necesario
-      - SPARK_WORKER_CORES=1
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
-      - SPARK_USER=spark
-    networks:
-      - app_network
-    depends_on:
-      - spark-master
+     - app_network
 
   flask-api:
     build:
@@ -55,8 +29,7 @@ services:
       - app_network
     depends_on:
       - mongodb
-      - spark-master
-      - spark-worker
+      - redis
 
 networks:
   app_network:

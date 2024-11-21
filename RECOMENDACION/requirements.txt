@@ -2,4 +2,4 @@
 pymongo
 pandas
 scikit-learn
-pyspark
+redis
