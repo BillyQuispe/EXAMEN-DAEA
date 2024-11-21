@@ -33,7 +33,7 @@ services:
 
   react-frontend:
     build:
-      context: ./frontend
+      context: ./fronted
     container_name: react-frontend
     ports:
       - "3000:3000"
